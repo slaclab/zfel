@@ -1,10 +1,9 @@
 import numpy as np
-import scipy
-import load_bucket
+from scipy.special import jv
 import matplotlib.pyplot as plt 
 
 def sase(inp_struct):
-    '''
+    """
     SASE 1D FEL run function
     Input:
     Nruns                       # Number of runs
@@ -38,7 +37,7 @@ def sase(inp_struct):
     thet_out                    # output phase
     gam_out                     # output energy in unit of mc2
     bunching                    # bunching factor
-    '''
+    """
 
     #export variables
     Nruns=inp_struct['Nruns']
@@ -70,8 +69,8 @@ def sase(inp_struct):
     e = 1.60217733E-19      # electron charge in Coulomb
 
     #calculating intermediate parameters
-    unduJJ  = scipy.special.jv(0,unduK**2/(4+2*unduK**2))\
-              -scipy.special.jv(1,unduK**2/(4+2*unduK**2))  # undulator JJ
+    unduJJ  = jv(0,unduK**2/(4+2*unduK**2))\
+              -jv(1,unduK**2/(4+2*unduK**2))  # undulator JJ
     gamma0  = energy/mc2                                    # central energy of the beam in unit of mc2
     sigmaX2 = emitN*beta/gamma0                             # rms transverse size, divergence of the electron beam
     rho     = (0.5/gamma0)*((currentMax/alfvenCurrent)\
@@ -118,7 +117,7 @@ def sase(inp_struct):
         for k in range(s_steps):
             ar[k,0] = np.sqrt(a02)                                              # input seed signal
             ai[k,0] = 0.0
-            [thet0,gam0] = load_bucket.load_bucket(npart,gbar,delg,iopt,Ns)     # load each bucket
+            [thet0,gam0] = load_bucket(npart,gbar,delg,iopt,Ns)     # load each bucket
             gam[:,0] = gam0.T
             thet_output[:,0]=thet0.T                                                   # gamma at j=1
             thethalf[:,0] = thet0.T-gam[:,0]*delt/2                             # half back
@@ -174,7 +173,7 @@ def sase(inp_struct):
 
 
         delth=delt/2.0
-        [thet,gam] = load_bucket.load_bucket(npart,gbar,delg,iopt,Ns)
+        [thet,gam] = load_bucket(npart,gbar,delg,iopt,Ns)
         ar=np.sqrt(a02)      # initial seed signal
         print(ar)
         ai=0.0
@@ -233,6 +232,55 @@ def sase(inp_struct):
         history={'z':z,'power_z':power_z,'s':s,'power_s':power_s,'field':field,'field_s':field_s,'thet_output':thet_out,'gam':gam_out,'rho':rho,'detune':detune,'iopt':iopt}
 
     return z,power_z,s,power_s,rho,detune,field,field_s,gainLength,resWavelength,thet_out,gam_out,bunching,history
+
+
+
+def load_bucket(n,gbar,delg,iopt,Ns):
+    """
+    random initialization of the beam load_bucket
+    inputs:
+    n               # n-macro-particles per bucket
+    gbar            # scaled detune parameter
+    delg            # Gaussian energy spread in units of rho
+    iopt            # 5=SASE, 4=seeded
+    Ns              # N electrons per s-slice ??
+    outputs:
+    thet            # bucket macro particles position
+    gam             # bucket macro particles energy
+    """
+    nmax = 10000;
+    if n>nmax:
+        raise ValueError('increase nmax, subr load')
+
+    gam=np.zeros(n)
+    thet=np.zeros(n)
+    if iopt==4:
+        M=128                                               # number of particles in each beamlet
+        nb= int(np.round(n/M))                              # number of beamlet via Fawley between 64 to 256 (x16=1024 to 4096)
+        if M*nb!=n:
+            raise ValueError('n must be a multiple of 4')
+        for i in range(nb):
+            #gamma=delg*np.random.randn(1)+gbar
+            gamma=delg*(np.random.rand(1)-0.5)+gbar
+            for j in range(M):
+                gam[i*M+j]=gamma
+                thet[i*M+j]=2*np.pi*(j+1)/M
+    elif iopt==5:
+        M=4  # number of particles in each beamlet
+        nb= int(np.round(n/M) )    #number of beamlet via Fawley between 64 to 256 (x16=1024 to 4096)
+        if M*nb!=n:
+            raise ValueError('n must be a multiple of 4')
+        effnoise = np.sqrt(3*M/(Ns/nb))    # Penman algorithm for Ns/nb >> M
+        for i in range(nb):
+            #gamma=delg*np.random.randn(1)+gbar
+            gamma=delg*(np.random.rand(1)-0.5)+gbar
+            for j in range(M):
+                gam[i*M+j]=gamma
+                thet[i*M+j]=2*np.pi*(j+1)/M+2*np.random.rand(1)*effnoise
+    return thet,gam
+
+
+
 
 
 def plot_log_power_z(history):
