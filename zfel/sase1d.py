@@ -284,6 +284,9 @@ def load_bucket(n,gbar,delg,iopt,Ns):
 
 
 def plot_log_power_z(history):
+    """
+    X
+    """
     z=history['z']
     power_z=history['power_z']
     plt.figure()
@@ -345,6 +348,8 @@ def plot_norm_power_s(history):
     #figure(3)
     #surf(X',Y',p_norm,'EdgeAlpha',0)
     #view(0,90)
+
+
 
 
 
