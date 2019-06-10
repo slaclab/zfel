@@ -78,13 +78,13 @@ def sase(inp_struct):
 
     kappa_1=e*unduK*unduJJ/4/epsilon_0/gamma0
     density=currentMax/(e*c*2*np.pi*sigmaX2)
-    Kai=e*unduK*unduJJ/(2*gamma0**2*mc2)
+    Kai=e*unduK*unduJJ/(2*gamma0**2*mc2*e*1e6)
     ku=2*np.pi/unduPeriod
 
 
-    #rho     = (0.5/gamma0)*((currentMax/alfvenCurrent)\
-    #          *(unduPeriod*unduK*unduJJ/(2*np.pi))**2\
-    #          /(2*sigmaX2))**(1/3)                          # FEL Pierce parameter
+    rho     = (0.5/gamma0)*((currentMax/alfvenCurrent)\
+              *(unduPeriod*unduK*unduJJ/(2*np.pi))**2\
+              /(2*sigmaX2))**(1/3)                          # FEL Pierce parameter
     resWavelength = unduPeriod*(1+unduK**2/2.0)\
                     /(2*gamma0**2)                          # resonant wavelength
     Pbeam   = energy*currentMax/1000.0               # rho times beam power [GW]
@@ -113,7 +113,12 @@ def sase(inp_struct):
            -s_steps/2-bunch_steps)/bunch_steps))            # filling the shape of current and plot it
     plt.plot(shape)
     print('gbar',gbar)
-    print('delt',delt)
+    print('gbar/rho',gbar/rho)
+    print('delg/rho',eSpread/rho)
+    print('delt-rho',delt/(unduPeriod/(4*np.pi*rho)))
+
+
+    print('consistency',Kai/(2*ku*rho**2)*(density*kappa_1)/(2*ku*rho))
     # sase mode is chosen, go over all slices of the bunch starting from the tail k=1
     if iopt==5: 
         # initialization of variables during the 1D FEL process
@@ -128,6 +133,11 @@ def sase(inp_struct):
             Er[k,0] = np.sqrt(E02)                                              # input seed signal
             Ei[k,0] = 0.0
             [thet0,gam0] = load_bucket.load_bucket(npart,gbar,delg,iopt,Ns)     # load each bucket
+            if k==0:
+                print('ar',Kai/(2*ku*rho**2)*Er)
+                print('ai',Kai/(2*ku*rho**2)*Ei)
+                print('thet',thet0)
+                print('gam/rho',gam0/rho)
             gam[:,0] = gam0.T
             thet_output[:,0]=thet0.T                                                   # gamma at j=1
             thethalf[:,0] = thet0.T-2*ku*gam[:,0]*delt/2                             # half back
@@ -140,9 +150,16 @@ def sase(inp_struct):
                 cosavg = sumcos/npart#shape[k]*sumcos/npart
                 Erhalf = Er[k,j]+kappa_1*density * cosavg*dels/2   #minus sign 
                 Eihalf = Ei[k,j]-kappa_1*density * sinavg*dels/2
+                if k==0 and (j==0 or j==1):
+                    print('thet',thet)
+                    print('ar',Kai/(2*ku*rho**2)*Erhalf)
+                    print('ai',Kai/(2*ku*rho**2)*Eihalf)
+                    
                 thethalf[:,j+1] = thethalf[:,j]+2*ku*gam[:,j]*delt
                 gam[:,j+1] = gam[:,j]-2*Kai*Erhalf*np.cos(thethalf[:,j+1])*delt\
                              +2*Kai*Eihalf*np.sin(thethalf[:,j+1])*delt#-Eloss*delt  #Eloss*delt to simulate the taper
+                if k==0 and (j==0 or j==1):
+                    print('gam/rho',gam[:,j+1]/rho)
                 thet_output[:,j+1]=thet
                 sumsin = np.sum(np.sin(thethalf[:,j+1]))
                 sumcos = np.sum(np.cos(thethalf[:,j+1]))
@@ -150,6 +167,11 @@ def sase(inp_struct):
                 cosavg = sumcos/npart#shape[k]*sumcos/npart
                 Er[k+1,j+1] = Er[k,j]+kappa_1*density *cosavg*dels                               # apply slippage condition
                 Ei[k+1,j+1] = Ei[k,j]-kappa_1*density *sinavg*dels
+                if k==s_steps-1 and j==z_steps-1:
+                    print(k)
+                    print('thet',thet)
+                    print('ar',Kai/(2*ku*rho**2)*Er[k+1,j+1])
+                    print('ai',Kai/(2*ku*rho**2)*Ei[k+1,j+1])
                 bunching[k,j]=np.mean(np.real(np.exp(-1j*thet)))\
                               +np.mean(np.imag(np.exp(-1j*thet)))*1j            #bunching factor calculation
     
@@ -159,17 +181,16 @@ def sase(inp_struct):
         gamavg=np.zeros(z_steps)
         for j in range(z_steps):
             for k in range(s_steps):
-                power_s[j,k] = (Er[k+1,j]**2+Ei[k+1,j]**2)
-            power_z[j] = np.sum(Er[:,j]**2+Ei[:,j]**2)/s_steps
+                power_s[j,k] = (Er[k+1,j]**2+Ei[k+1,j]**2)*Kai/(density*kappa_1)*Pbeam
+            power_z[j] = np.sum(Er[:,j]**2+Ei[:,j]**2)*Kai/(density*kappa_1)*Pbeam/s_steps
             gamavg[j] = np.sum(gam[:,j+1])/npart                                # average electron energy at every z position
             thet_out=0                                                          # don't output phase space
             gam_out=0
         detune = 2*np.pi/(dels*s_steps)*np.arange(-s_steps/2,s_steps/2+1)
-        field = (Er[:,z_steps]+Ei[:,z_steps]*1j)
-        field_s = (Er[:,:]+Ei[:,:]*1j)
-        rho=0
+        field = (Er[:,z_steps]+Ei[:,z_steps]*1j)*np.sqrt(Kai/(density*kappa_1)*Pbeam)
+        field_s = (Er[:,:]+Ei[:,:]*1j)*np.sqrt(Kai/(density*kappa_1)*Pbeam)
         history={'z':z,'power_z':power_z,'s':s,'power_s':power_s,'field':field,'field_s':field_s,'thet_output':thet_output,'gam':gam,'rho':rho,'detune':detune,'iopt':iopt}
-
+        print('number',np.sqrt(Kai/(density*kappa_1)*Pbeam))
     return z,power_z,s,power_s,rho,detune,field,field_s,gainLength,resWavelength,thet_out,gam_out,bunching,history
 
 
@@ -195,15 +216,16 @@ def plot_phase_space(history):
     thet_output=history['thet_output']
     gam=history['gam']
     iopt=history['iopt']
+    rho=history['rho']
     for j in range(z.shape[0]):
         plt.figure()
-        plt.plot(thet_output[:,j],gam[:,j],'.')
+        plt.plot(thet_output[:,j],gam[:,j]/rho,'.')
         plt.xlabel('theta')
         plt.ylabel('\Delta\gamma/(\gamma rho)')
         if iopt==4:
             plt.axis([-np.pi,np.pi,-5,5])
         else:
-            pass
+            plt.axis([0,9,-2.5,2.5])
             #plt.axis([0,9,-2.5,2.5])
         plt.title('undulator distance (m) = '+str(z[j]))
         #pause(.02)
