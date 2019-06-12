@@ -105,20 +105,20 @@ def sase(inp_struct):
     z = np.arange(1,z_steps+1)*delt*gainLength              # longitundinal steps along undulator in meter
 
     bunchLength=s[-1]*1e-6#/2.5                              # beam length in meter
-    print('bunchLength',bunchLength)
+    #print('bunchLength',bunchLength)
     bunch_steps=np.round(bunchLength/delt/coopLength)       # rms (Gaussian) or half width (flattop) bunch length in s_step
     shape= 0.5*(np.tanh(10*(np.arange(1,s_steps+1)\
            -s_steps/2+bunch_steps)/bunch_steps)\
            -np.tanh(10*(np.arange(1,s_steps+1)\
            -s_steps/2-bunch_steps)/bunch_steps))            # filling the shape of current and plot it
     plt.plot(shape)
-    print('gbar',gbar)
-    print('gbar/rho',gbar/rho)
-    print('delg/rho',eSpread/rho)
-    print('delt-rho',delt/(unduPeriod/(4*np.pi*rho)))
+    # print('gbar',gbar)
+    # print('gbar/rho',gbar/rho)
+    # print('delg/rho',eSpread/rho)
+    # print('delt-rho',delt/(unduPeriod/(4*np.pi*rho)))
 
 
-    print('consistency',Kai/(2*ku*rho**2)*(density*kappa_1)/(2*ku*rho))
+    #print('consistency',Kai/(2*ku*rho**2)*(density*kappa_1)/(2*ku*rho))
     # sase mode is chosen, go over all slices of the bunch starting from the tail k=1
     if iopt==5: 
         # initialization of variables during the 1D FEL process
@@ -133,11 +133,11 @@ def sase(inp_struct):
             Er[k,0] = np.sqrt(E02)                                              # input seed signal
             Ei[k,0] = 0.0
             [thet0,gam0] = load_bucket.load_bucket(npart,gbar,delg,iopt,Ns)     # load each bucket
-            if k==0:
-                print('ar',Kai/(2*ku*rho**2)*Er)
-                print('ai',Kai/(2*ku*rho**2)*Ei)
-                print('thet',thet0)
-                print('gam/rho',gam0/rho)
+            # if k==0:
+            #     print('ar',Kai/(2*ku*rho**2)*Er)
+            #     print('ai',Kai/(2*ku*rho**2)*Ei)
+            #     print('thet',thet0)
+            #     print('gam/rho',gam0/rho)
             gam[:,0] = gam0.T
             thet_output[:,0]=thet0.T                                                   # gamma at j=1
             thethalf[:,0] = thet0.T-2*ku*gam[:,0]*delt/2                             # half back
@@ -150,16 +150,16 @@ def sase(inp_struct):
                 cosavg = sumcos/npart#shape[k]*sumcos/npart
                 Erhalf = Er[k,j]+kappa_1*density * cosavg*dels/2   #minus sign 
                 Eihalf = Ei[k,j]-kappa_1*density * sinavg*dels/2
-                if k==0 and (j==0 or j==1):
-                    print('thet',thet)
-                    print('ar',Kai/(2*ku*rho**2)*Erhalf)
-                    print('ai',Kai/(2*ku*rho**2)*Eihalf)
+                # if k==0 and (j==0 or j==1):
+                #     print('thet',thet)
+                #     print('ar',Kai/(2*ku*rho**2)*Erhalf)
+                #     print('ai',Kai/(2*ku*rho**2)*Eihalf)
                     
                 thethalf[:,j+1] = thethalf[:,j]+2*ku*gam[:,j]*delt
                 gam[:,j+1] = gam[:,j]-2*Kai*Erhalf*np.cos(thethalf[:,j+1])*delt\
                              +2*Kai*Eihalf*np.sin(thethalf[:,j+1])*delt#-Eloss*delt  #Eloss*delt to simulate the taper
-                if k==0 and (j==0 or j==1):
-                    print('gam/rho',gam[:,j+1]/rho)
+                # if k==0 and (j==0 or j==1):
+                #     print('gam/rho',gam[:,j+1]/rho)
                 thet_output[:,j+1]=thet
                 sumsin = np.sum(np.sin(thethalf[:,j+1]))
                 sumcos = np.sum(np.cos(thethalf[:,j+1]))
@@ -167,11 +167,11 @@ def sase(inp_struct):
                 cosavg = sumcos/npart#shape[k]*sumcos/npart
                 Er[k+1,j+1] = Er[k,j]+kappa_1*density *cosavg*dels                               # apply slippage condition
                 Ei[k+1,j+1] = Ei[k,j]-kappa_1*density *sinavg*dels
-                if k==s_steps-1 and j==z_steps-1:
-                    print(k)
-                    print('thet',thet)
-                    print('ar',Kai/(2*ku*rho**2)*Er[k+1,j+1])
-                    print('ai',Kai/(2*ku*rho**2)*Ei[k+1,j+1])
+                # if k==s_steps-1 and j==z_steps-1:
+                #     print(k)
+                #     print('thet',thet)
+                #     print('ar',Kai/(2*ku*rho**2)*Er[k+1,j+1])
+                #     print('ai',Kai/(2*ku*rho**2)*Ei[k+1,j+1])
                 bunching[k,j]=np.mean(np.real(np.exp(-1j*thet)))\
                               +np.mean(np.imag(np.exp(-1j*thet)))*1j            #bunching factor calculation
     
@@ -190,7 +190,8 @@ def sase(inp_struct):
         field = (Er[:,z_steps]+Ei[:,z_steps]*1j)*np.sqrt(Kai/(density*kappa_1)*Pbeam)
         field_s = (Er[:,:]+Ei[:,:]*1j)*np.sqrt(Kai/(density*kappa_1)*Pbeam)
         history={'z':z,'power_z':power_z,'s':s,'power_s':power_s,'field':field,'field_s':field_s,'thet_output':thet_output,'gam':gam,'rho':rho,'detune':detune,'iopt':iopt}
-        print('number',np.sqrt(Kai/(density*kappa_1)*Pbeam))
+        print(z.shape,power_z.shape)
+        #print('number',np.sqrt(Kai/(density*kappa_1)*Pbeam))
     return z,power_z,s,power_s,rho,detune,field,field_s,gainLength,resWavelength,thet_out,gam_out,bunching,history
 
 
