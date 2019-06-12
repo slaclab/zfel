@@ -65,7 +65,7 @@ def sase(inp_struct):
 
     # Some constant values
     alfvenCurrent = 17045.0 # Alfven current ~ 17 kA
-    mc2 = 510.99906E-3      # Electron rest mass in MeV
+    mc2 = 0.51099906E6      # Electron rest mass in MeV
     c = 2.99792458E8        # light speed in meter
     e = 1.60217733E-19      # electron charge in Coulomb
     epsilon_0=8.85418782E-12 #electric constant
@@ -78,7 +78,7 @@ def sase(inp_struct):
 
     kappa_1=e*unduK*unduJJ/4/epsilon_0/gamma0
     density=currentMax/(e*c*2*np.pi*sigmaX2)
-    Kai=e*unduK*unduJJ/(2*gamma0**2*mc2*e*1e6)
+    Kai=e*unduK*unduJJ/(2*gamma0**2*mc2*e)
     ku=2*np.pi/unduPeriod
 
 
@@ -87,7 +87,7 @@ def sase(inp_struct):
               /(2*sigmaX2))**(1/3)                          # FEL Pierce parameter
     resWavelength = unduPeriod*(1+unduK**2/2.0)\
                     /(2*gamma0**2)                          # resonant wavelength
-    Pbeam   = energy*currentMax/1000.0               # rho times beam power [GW]
+    Pbeam   = energy*currentMax               # rho times beam power [W]
     coopLength = resWavelength/unduPeriod                # cooperation length
     gainLength = 1                                      # rough gain length
     #cs0  = bunchLength/coopLength                           # bunch length in units of cooperation length     
@@ -117,7 +117,8 @@ def sase(inp_struct):
     # print('delg/rho',eSpread/rho)
     # print('delt-rho',delt/(unduPeriod/(4*np.pi*rho)))
 
-
+    print('Kai/(density*kappa_1)*Pbeam', Kai/(density*kappa_1)*Pbeam)
+    print('(4*np.pi*epsilon_0*sigmaX2*x)', (4*np.pi*epsilon_0*sigmaX2*c))
     #print('consistency',Kai/(2*ku*rho**2)*(density*kappa_1)/(2*ku*rho))
     # sase mode is chosen, go over all slices of the bunch starting from the tail k=1
     if iopt==5: 
@@ -181,8 +182,8 @@ def sase(inp_struct):
         gamavg=np.zeros(z_steps)
         for j in range(z_steps):
             for k in range(s_steps):
-                power_s[j,k] = (Er[k+1,j]**2+Ei[k+1,j]**2)*Kai/(density*kappa_1)*Pbeam
-            power_z[j] = np.sum(Er[:,j]**2+Ei[:,j]**2)*Kai/(density*kappa_1)*Pbeam/s_steps
+                power_s[j,k] = (Er[k+1,j]**2+Ei[k+1,j]**2)* (4*np.pi*epsilon_0*sigmaX2*c) # == (4*np.pi*epsilon_0*sigmaX2)   #
+            power_z[j] = np.sum(Er[:,j]**2+Ei[:,j]**2)* (4*np.pi*epsilon_0*sigmaX2*c)/s_steps
             gamavg[j] = np.sum(gam[:,j+1])/npart                                # average electron energy at every z position
             thet_out=0                                                          # don't output phase space
             gam_out=0
