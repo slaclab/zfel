@@ -6,7 +6,9 @@ import scipy.io
 import random
 import datetime
 import time
-import sase1d
+
+
+from zfel import sase1d
 
 Nruns=1                             # Number of runs
 npart   = 512                       # n-macro-particles per bucket 
