@@ -1,5 +1,5 @@
 import numpy as np
-import scipy
+from scipy import special
 import load_bucket
 import matplotlib.pyplot as plt 
 
@@ -71,8 +71,8 @@ def sase(inp_struct):
     epsilon_0=8.85418782E-12 #electric constant
 
     #calculating intermediate parameters
-    unduJJ  = scipy.special.jv(0,unduK**2/(4+2*unduK**2))\
-              -scipy.special.jv(1,unduK**2/(4+2*unduK**2))  # undulator JJ
+    unduJJ  = special.jv(0,unduK**2/(4+2*unduK**2))\
+              -special.jv(1,unduK**2/(4+2*unduK**2))  # undulator JJ
     gamma0  = energy/mc2                                    # central energy of the beam in unit of mc2
     sigmaX2 = emitN*beta/gamma0                             # rms transverse size, divergence of the electron beam
 
