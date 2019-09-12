@@ -12,7 +12,7 @@ def mingxie(sigma_x=None,    # RMS beam size
     """
     Calculates gain length using the Ming Xie formula.
     
-    DESIGN OPTIMIZATION FOR AN X-RAY FREE ELECTRON LASER DRIVEN BY SLAC LINAC 􏰢
+    Design Optimization for an X-ray Free Elecgron Laser Driven by SLAC Linac
     Ming Xie, Lawrence Berkeley Laboratory, Berkeley, CA 94720, USA
     http://accelconf.web.cern.ch/AccelConf/p95/ARTICLES/TPG/TPG10.PDF
     
