@@ -1,4 +1,5 @@
-
+*/*.ipynb_checkpoints*
+devel/*
 .DS_Store
 .ipynb_checkpoints/Untitled-checkpoint.ipynb
 examples/.ipynb_checkpoints/sase1d_run-checkpoint.ipynb
