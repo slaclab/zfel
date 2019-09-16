@@ -4,6 +4,7 @@ import numpy as np
 from scipy import special
 import matplotlib.pyplot as plt 
 
+
 def sase(inp_struct):
     '''
     SASE 1D FEL run function
