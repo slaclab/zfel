@@ -25,4 +25,46 @@ Is this the case for zfel? Not sure..
 - For a 1-D code, because it is easy to store a single E(z) per z step, could do it the other way to make accounting for slippage easier
 
 
-******** Adding tapering is easy. Fixing the rest is harder/needs to be done first*********** 
+******** Adding tapering is easy. Fixing the rest is harder/needs to be done first***********
+
+
+Sept 18th, 2019: 
+
+Conclusions from yesterday's meeting with Chris is that the loading seems somewhat wrong but not entirely wrong. 
+
+Need to determine the difference between bucket and slice!!
+
+Genesis1.3 Manual, "Time Dependent Effects" pg 9: 
+Bucket: electrons in 1 radiation wavelength within the electron bunch. USED FOR STEADY STATE
+Slice: discritiztion of electron bunch in time. USED FOR TIME DEPENDENT
+
+Loading should be changed to not be beamlets but Hammersley.
+^^ Started working on this
+ 
+Talked to Claudio - Definitions are correct, a slice is 1 rad length worth of electrons, electrons only rotate within
+a slice, do not move slices.
+
+To do:
+1) Change loading to quick/random because beamlets is wrong. Update to Hammersley in future
+2) Tapering?
+3) Plot separatrix option 
+
+
+Sept. 19, 2019: 
+
+Making progress on adding tapering. 
+
+Changing all "kai" to chi_1
+
+Note: need to calculate gain length not just set it (can be calculated ~~~~ \lambda_u/4\pi\rho) need to find full formula
+
+For benchmarking, need to get K's from Claudio's code to run both and check if results are similar? 
+His code creates and saves outputs so that's good. Need to go back through those and figure out what is what. 
+
+Have not yet run benchmark program in zfel - do that!
+
+Update: Tapering is now included (basic). Need to: 
+- test it
+- include error messages for wrong tapering arrays??
+- include other ways of inputing tapering (function??)
+
