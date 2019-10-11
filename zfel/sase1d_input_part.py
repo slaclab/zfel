@@ -26,6 +26,7 @@ def sase(inp_struct):
     P0                          # small seed input power [W]
     constseed                   # whether we want to use constant  random seed for reproducibility, 1 Yes, 0 No
     particle_position           # particle information with positions in meter and gamma
+    hist_steps                  # number of intervals to generate the histogram of gamma value in a bucket
 
     Output:
     z                           # longitudinal steps along undulator
@@ -62,6 +63,7 @@ def sase(inp_struct):
     P0=inp_struct['P0']
     constseed=inp_struct['constseed']
     particle_position=inp_struct['particle_position']
+    hist_steps=inp_struct['hist_steps']
 
     # whether to use constant random seed for reproducibility
     if constseed==1:
@@ -114,10 +116,12 @@ def sase(inp_struct):
            -s_steps/2+bunch_steps)/bunch_steps)\
            -np.tanh(10*(np.arange(1,s_steps+1)\
            -s_steps/2-bunch_steps)/bunch_steps))            # filling the shape of current and plot it
+    plt.figure()
     plt.plot(shape)
 
     #load buckets
-    [thet_init,gam_init]=general_load_bucket.general_load_bucket(npart,gbar,delg,iopt,Ns,coopLength,resWavelength,particle_position,s_steps,dels)
+    [thet_init,gam_init]=general_load_bucket.general_load_bucket(npart,gbar,delg,iopt\
+        ,Ns,coopLength,resWavelength,particle_position,s_steps,dels,hist_steps)
 
     
 
