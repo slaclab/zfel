@@ -3,7 +3,7 @@ from zfel import load_bucket
 import numpy as np
 from scipy import special
 import matplotlib.pyplot as plt 
-
+from scipy import optimize
 
 def sase(inp_struct):
     '''
@@ -381,10 +381,10 @@ def saseTaper(inp_struct):
 
 
 def plot_log_power_z(history):
-    z=history['z']
-    power_z=history['power_z']
+    z=history['z'][1:]
+    power_z=history['power_z'][1:]
     plt.figure()
-    plt.plot(z,np.log(power_z))
+    plt.plot(z,np.log(power_z), 'k.')
     plt.xlabel('z (m)')
     plt.ylabel('log(P) (W)')
 
@@ -438,7 +438,7 @@ def plot_pspec(history):
     rho=history['rho']
     detune=history['detune']
     plt.figure()
-    fieldFFT = np.fftshift(np.fft(field.T))                  # unconjugate complex transpose by .'
+    fieldFFT = np.fft.fftshift(np.fft(field.T))                  # unconjugate complex transpose by .'
     Pspec=fieldFFT*np.conj(fieldFFT)
     plt.plot(detune*2*rho,Pspec)
     plt.axis([-0.06,+0.01,0,1.2*np.max(Pspec)])
@@ -461,9 +461,36 @@ def plot_norm_power_s(history):
     #surf(X',Y',p_norm,'EdgeAlpha',0)
     #view(0,90)
 
+    
+####### Implementing validation ######
 
+def fitGainLength(history, xi, xf, gainLength):
+    
+    y_data = np.log(history['power_z'][xi:xf])
+    x_data = history['z'][xi:xf]
+    plt.plot(x_data,y_data, 'r.')
+    plt.title('Fitting Gain Length')
+    plt.xlabel('z (m)')
+    plt.ylabel('log(P) W')
+    plt.show()
+    params, params_covar = optimize.curve_fit(gain_fitting_function, x_data, y_data, p0=[0, gainLength])
+    Lg = params[0]**-1
+    percentError = 100*(Lg-gainLength)/gainLength  # Is negative if the sim Lg is shorter than theory
+    return params, percentError
+    
+def gain_fitting_function(x,m,b):
+    return m * x + b 
 
-
-
-
-
+def rhoCalculation(inputStruct, history,xf,rhoTheory):
+    pBeam = inputStruct['currentMax']*inputStruct['energy']+inputStruct['P0']
+    maxPower = np.max(history['power_z'][0:xf])
+    x_data = history['z'][0:xf]
+    plt.plot(x_data,history['power_z'][0:xf])
+    plt.title('Rho Calc')
+    plt.xlabel('z (m)')
+    plt.ylabel('P(W) ')
+    plt.show()
+    rho = maxPower/pBeam
+    err = 100*(rho - rhoTheory[0])/rhoTheory[0]
+    return rho, err
+    
