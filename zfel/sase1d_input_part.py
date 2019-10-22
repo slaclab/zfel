@@ -26,7 +26,7 @@ def sase(inp_struct):
     P0                          # small seed input power [W]
     constseed                   # whether we want to use constant  random seed for reproducibility, 1 Yes, 0 No
     particle_position           # particle information with positions in meter and gamma
-    hist_steps                  # number of intervals to generate the histogram of gamma value in a bucket
+    hist_rule                   # different rules to select number of intervals to generate the histogram of gamma value in a bucket
 
     Output:
     z                           # longitudinal steps along undulator
@@ -42,6 +42,9 @@ def sase(inp_struct):
     thet_out                    # output phase
     gam_out                     # output energy in unit of mc2
     bunching                    # bunching factor
+    spectrum                    # spectrum power
+    freq                        # frequency in ev
+    Ns                          # real number of examples
     '''
 
     #export variables
@@ -63,7 +66,7 @@ def sase(inp_struct):
     P0=inp_struct['P0']
     constseed=inp_struct['constseed']
     particle_position=inp_struct['particle_position']
-    hist_steps=inp_struct['hist_steps']
+    hist_rule=inp_struct['hist_rule']
 
     # whether to use constant random seed for reproducibility
     if constseed==1:
@@ -75,6 +78,7 @@ def sase(inp_struct):
     c = 2.99792458E8        # light speed in meter
     e = 1.60217733E-19      # electron charge in Coulomb
     epsilon_0=8.85418782E-12 #electric constant
+    hbar=6.582e-16          #in eV
 
     #calculating intermediate parameters
     unduJJ  = scipy.special.jv(0,unduK**2/(4+2*unduK**2))\
@@ -121,9 +125,8 @@ def sase(inp_struct):
 
     #load buckets
     [thet_init,gam_init]=general_load_bucket.general_load_bucket(npart,gbar,delg,iopt\
-        ,Ns,coopLength,resWavelength,particle_position,s_steps,dels,hist_steps)
+        ,Ns,coopLength,resWavelength,particle_position,s_steps,dels,hist_rule)
 
-    
 
 
 
@@ -181,9 +184,14 @@ def sase(inp_struct):
         detune = 2*np.pi/(dels*s_steps)*np.arange(-s_steps/2,s_steps/2+1)
         field = (Er[:,z_steps]+Ei[:,z_steps]*1j)*np.sqrt(Kai/(density*kappa_1)*Pbeam)
         field_s = (Er[:,:]+Ei[:,:]*1j)*np.sqrt(Kai/(density*kappa_1)*Pbeam)
-        history={'z':z,'power_z':power_z,'s':s,'power_s':power_s,'field':field,'field_s':field_s,'thet_output':thet_output,'gam':gam,'rho':rho,'detune':detune,'iopt':iopt}        
-
-    return z,power_z,s,power_s,rho,detune,field,field_s,gainLength,resWavelength,thet_out,gam_out,bunching,history
+        pfft = np.fft.fft(field_s[:,1:],axis=1)
+        spectrum = np.fft.fftshift(np.absolute(pfft)**2)
+        omega=hbar * 2.0 * np.pi / (resWavelength/c)
+        df=hbar * 2.0 * np.pi*1/(bunchLength/c)
+        freq = np.linspace(omega - s_steps/2 * df, omega + s_steps/2 * df,s_steps)
+        history={'z':z,'power_z':power_z,'s':s,'power_s':power_s,'field':field,'field_s':field_s,'thet_output':thet_output,'gam':gam,'rho':rho,'detune':detune,'iopt':iopt,'spectrum':spectrum,'freq':freq}        
+        
+    return z,power_z,s,power_s,rho,detune,field,field_s,gainLength,resWavelength,thet_out,gam_out,bunching,spectrum,freq,Ns,history
 
 
 def plot_log_power_z(history):
@@ -200,7 +208,7 @@ def plot_power_s(history):
     plt.figure()
     for i in range(power_s.shape[0]):
         plt.plot(s,power_s[i,:])
-    plt.xlabel('s (m)')
+    plt.xlabel('s (um)')
     plt.ylabel('power at different z positions (W)')
 
 def plot_phase_space(history):
@@ -211,13 +219,15 @@ def plot_phase_space(history):
     rho=history['rho']
     for j in range(z.shape[0]):
         plt.figure()
-        plt.plot(thet_output[:,j],gam[:,j]/rho,'.')
+        #plt.plot(thet_output[:,j],gam[:,j]/rho,'.')
+        plt.plot(thet_output[:,j],gam[:,j],'.')
         plt.xlabel('theta')
         plt.ylabel('\Delta\gamma/(\gamma rho)')
         if iopt==4:
             plt.axis([-np.pi,np.pi,-5,5])
         else:
-            plt.axis([0,9,-2.5,2.5])
+            pass
+            #plt.axis([0,9,8400000,8500000])
             #plt.axis([0,9,-2.5,2.5])
         plt.title('undulator distance (m) = '+str(z[j]))
         #pause(.02)
