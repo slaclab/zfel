@@ -1,25 +1,25 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def general_load_bucket(npart,gbar,delg,iopt,Ns,coopLength,resWavelength,particle_position,s_steps,dels,hist_rule):
+def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_rule,gbar=None,delg=None,iopt=None,):
     '''
     random initialization of the beam load_bucket
     inputs:
     npart               # n-macro-particles per bucket
-    gbar            # scaled detune parameter
-    delg            # Gaussian energy spread in units of rho
-    iopt            # 5=SASE, 4=seeded
-    Ns              # N electrons per s-slice at maximum current
-    coopLength      # cooperation length
-    resWavelength               # resonant wavelength
-    particle_position           # particle information with positions in meter and gamma
-    s_steps         # n-sample points along bunch length
-    dels            # integration step in s0
-    hist_rule       # different rules to select number of intervals to generate the histogram of gamma value in a bucket
+    gbar                # scaled detune parameter
+    delg                # Gaussian energy spread in units of rho
+    iopt                # 'sase' or 'seeded'
+    Ns                  # N electrons per s-slice at maximum current
+    coopLength          # cooperation length
+    particle_position   # particle information with positions in meter and gamma
+    s_steps             # n-sample points along bunch length
+    dels                # integration step in s0
+    hist_rule           # different rules to select number of intervals to generate the histogram of gamma value in a bucket
 
     outputs:
-    thet_init            # all buckets macro particles position
-    gam_init             # all buckets macro particles energy
+    thet_init           # all buckets macro particles position
+    gam_init            # all buckets macro particles energy
+    N_real              # real number of particles along the beam
     '''
     if particle_position is None:
         thet_init=np.zeros((s_steps,npart))
@@ -50,7 +50,9 @@ def general_load_bucket(npart,gbar,delg,iopt,Ns,coopLength,resWavelength,particl
             #deal with the case that all input gamma values are the same
             #gam_init=np.ones((s_steps,npart))*np.max(gam_step)
             #print('Warning, all input gamma values are the same!')
-    return thet_init,gam_init
+
+
+    return {'thet_init':thet_init,'gam_init':gam_init,'N_real':N_real}
 
 
 
@@ -62,7 +64,7 @@ def load_bucket(n,gbar,delg,iopt,Ns):
     n               # n-macro-particles per bucket
     gbar            # scaled detune parameter
     delg            # Gaussian energy spread in units of rho
-    iopt            # 5=SASE, 4=seeded
+    iopt            # 'sase' or 'seeded'
     Ns              # N electrons per s-slice
     outputs:
     thet            # bucket macro particles position
@@ -76,7 +78,7 @@ def load_bucket(n,gbar,delg,iopt,Ns):
 
     gam=np.zeros(n)
     thet=np.zeros(n)
-    if iopt==4:
+    if iopt=='seeded':
         M=128                                               # number of particles in each beamlet
         nb= int(np.round(n/M))                              # number of beamlet via Fawley between 64 to 256 (x16=1024 to 4096)
         if M*nb!=n:
@@ -87,7 +89,7 @@ def load_bucket(n,gbar,delg,iopt,Ns):
             for j in range(M):
                 gam[i*M+j]=gamma
                 thet[i*M+j]=2*np.pi*(j+1)/M
-    elif iopt==5:
+    elif iopt=='sase':
         M=32  # number of particles in each beamlet
         nb= int(np.round(n/M) )    #number of beamlet via Fawley between 64 to 256 (x16=1024 to 4096)
         if M*nb!=n:
@@ -106,7 +108,7 @@ def make_theta(n,N_real_bucket):
     random initialization of a bucket's particle positions
     inputs:
     n               # n-macro-particles per bucket
-    N_real_bucket          # real number of particles in a bucket
+    N_real_bucket   # real number of particles in a bucket
     outputs:
     thet            # macro particles position in a bucket
     '''

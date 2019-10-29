@@ -22,7 +22,7 @@ def sase(inp_struct):
     unduL                       # length of undulator [meter]
     radWavelength               # seed wavelength? [meter], used only in single-freuqency runs
     dEdz                        # rate of relative energy gain or taper [keV/m], optimal~130
-    iopt                        # 5=SASE, 4=seeded
+    iopt                        # 'sase' or 'seeded'
     P0                          # small seed input power [W]
     constseed                   # whether we want to use constant  random seed for reproducibility, 1 Yes, 0 No
     particle_position           # particle information with positions in meter and gamma
@@ -116,22 +116,24 @@ def sase(inp_struct):
 
     bunchLength=s[-1]*1e-6                              # beam length in meter
     bunch_steps=np.round(bunchLength/delt/coopLength)       # rms (Gaussian) or half width (flattop) bunch length in s_step
-    shape= 0.5*(np.tanh(10*(np.arange(1,s_steps+1)\
-           -s_steps/2+bunch_steps)/bunch_steps)\
-           -np.tanh(10*(np.arange(1,s_steps+1)\
-           -s_steps/2-bunch_steps)/bunch_steps))            # filling the shape of current and plot it
+
+    #load buckets
+    bucket_data=general_load_bucket.general_load_bucket(npart\
+        ,Ns,coopLength,particle_position,s_steps,dels,hist_rule,gbar,delg,iopt)
+    thet_init=bucket_data['thet_init']
+    gam_init=bucket_data['gam_init']
+    N_real=bucket_data['N_real']
+    shape=N_real/np.max(N_real)
+    #shape= 0.5*(np.tanh(10*(np.arange(1,s_steps+1)\
+    #       -s_steps/2+bunch_steps)/bunch_steps)\
+    #       -np.tanh(10*(np.arange(1,s_steps+1)\
+    #       -s_steps/2-bunch_steps)/bunch_steps))            # filling the shape of current and plot it
     plt.figure()
     plt.plot(shape)
 
-    #load buckets
-    [thet_init,gam_init]=general_load_bucket.general_load_bucket(npart,gbar,delg,iopt\
-        ,Ns,coopLength,resWavelength,particle_position,s_steps,dels,hist_rule)
-
-
-
 
     # sase mode is chosen, go over all slices of the bunch starting from the tail k=1
-    if iopt==5: 
+    if iopt=='sase': 
         # initialization of variables during the 1D FEL process
         Er=np.zeros((s_steps+1,z_steps+1))
         Ei=np.zeros((s_steps+1,z_steps+1))
@@ -223,7 +225,7 @@ def plot_phase_space(history):
         plt.plot(thet_output[:,j],gam[:,j],'.')
         plt.xlabel('theta')
         plt.ylabel('\Delta\gamma/(\gamma rho)')
-        if iopt==4:
+        if iopt=='seeded':
             plt.axis([-np.pi,np.pi,-5,5])
         else:
             pass
