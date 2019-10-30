@@ -28,6 +28,7 @@ def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_
             [thet0,gam0] = load_bucket(npart,gbar,delg,iopt,Ns)     # load each bucket
             thet_init[j,:]=thet0
             gam_init[j,:]=gam0
+        N_real=np.ones(s_steps)
     else:
         #load particle information and classify them to different intervals
         s_all=particle_position[:,0]

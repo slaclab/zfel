@@ -95,8 +95,10 @@ def sase(inp_struct):
     rho     = (0.5/gamma0)*((currentMax/alfvenCurrent)\
               *(unduPeriod*unduK*unduJJ/(2*np.pi))**2\
               /(2*sigmaX2))**(1/3)                          # FEL Pierce parameter
-    resWavelength = unduPeriod*(1+unduK**2/2.0)\
+    resWavelength = unduPeriod*(1+unduK[0]**2/2.0)\
                     /(2*gamma0**2)                          # resonant wavelength
+    print(resWavelength)
+
     Pbeam   = energy*currentMax*1000.0               # rho times beam power [GW]
     coopLength = resWavelength/unduPeriod                # cooperation length
     gainLength = 1                                      # rough gain length
@@ -104,7 +106,7 @@ def sase(inp_struct):
     z0    = unduL/gainLength                                # wiggler length in units of gain length
     delt  = z0/z_steps                                      # integration step in z0 ~ 0.1 gain length
     dels  = delt                                            # integration step in s0 must be same as in z0 
-    E02   = density*kappa_1*P0*1E-9/Pbeam/Kai                                # scaled input power
+    E02   = density*kappa_1[0]*P0*1E-9/Pbeam/Kai[0]                              # scaled input power
     gbar  = (resWavelength-radWavelength)\
             /(radWavelength)                                # scaled detune parameter
     delg  = eSpread                                         # Gaussian energy spread in units of rho 
@@ -120,6 +122,7 @@ def sase(inp_struct):
     #load buckets
     bucket_data=general_load_bucket.general_load_bucket(npart\
         ,Ns,coopLength,particle_position,s_steps,dels,hist_rule,gbar,delg,iopt)
+    
     thet_init=bucket_data['thet_init']
     gam_init=bucket_data['gam_init']
     N_real=bucket_data['N_real']
@@ -130,6 +133,9 @@ def sase(inp_struct):
     #       -s_steps/2-bunch_steps)/bunch_steps))            # filling the shape of current and plot it
     plt.figure()
     plt.plot(shape)
+
+    deta = np.sqrt((1+0.5*unduK[0]**2)/(1+0.5*unduK**2))-1
+    print(deta)
 
 
     # sase mode is chosen, go over all slices of the bunch starting from the tail k=1
@@ -152,23 +158,23 @@ def sase(inp_struct):
             thethalf[:,0] = thet0.T-2*ku*gam[:,0]*delt/2                             # half back
             thet_out[k,0]=np.mean(thet0.T)
             for j in range(z_steps):                                            # evolve e and gamma in s and t by leap-frog
-                thet = thethalf[:,j]+2*ku*gam[:,j]*delt/2
+                thet = thethalf[:,j]+2*ku*(gam[:,j]+deta[j])*delt/2
                 sumsin = np.sum(np.sin(thet))
                 sumcos = np.sum(np.cos(thet))
                 sinavg = shape[k]*sumsin/npart
                 cosavg = shape[k]*sumcos/npart
-                Erhalf = Er[k,j]+kappa_1*density * cosavg*dels/2   #minus sign 
-                Eihalf = Ei[k,j]-kappa_1*density * sinavg*dels/2               
-                thethalf[:,j+1] = thethalf[:,j]+2*ku*gam[:,j]*delt
-                gam[:,j+1] = gam[:,j]-2*Kai*Erhalf*np.cos(thethalf[:,j+1])*delt\
-                             +2*Kai*Eihalf*np.sin(thethalf[:,j+1])*delt#-Eloss*delt  #Eloss*delt to simulate the taper
+                Erhalf = Er[k,j]+kappa_1[j]*density * cosavg*dels/2   #minus sign 
+                Eihalf = Ei[k,j]-kappa_1[j]*density * sinavg*dels/2               
+                thethalf[:,j+1] = thethalf[:,j]+2*ku*(gam[:,j]+deta[j])*delt
+                gam[:,j+1] = gam[:,j]-2*Kai[j]*Erhalf*np.cos(thethalf[:,j+1])*delt\
+                             +2*Kai[j]*Eihalf*np.sin(thethalf[:,j+1])*delt#-Eloss*delt  #Eloss*delt to simulate the taper
                 thet_output[:,j+1]=thet
                 sumsin = np.sum(np.sin(thethalf[:,j+1]))
                 sumcos = np.sum(np.cos(thethalf[:,j+1]))
                 sinavg = shape[k]*sumsin/npart
                 cosavg = shape[k]*sumcos/npart
-                Er[k+1,j+1] = Er[k,j]+kappa_1*density *cosavg*dels                               # apply slippage condition
-                Ei[k+1,j+1] = Ei[k,j]-kappa_1*density *sinavg*dels
+                Er[k+1,j+1] = Er[k,j]+kappa_1[j]*density *cosavg*dels                               # apply slippage condition
+                Ei[k+1,j+1] = Ei[k,j]-kappa_1[j]*density *sinavg*dels
                 bunching[k,j]=np.mean(np.real(np.exp(-1j*thet)))\
                               +np.mean(np.imag(np.exp(-1j*thet)))*1j            #bunching factor calculation
     
@@ -178,14 +184,14 @@ def sase(inp_struct):
         gamavg=np.zeros(z_steps)
         for j in range(z_steps):
             for k in range(s_steps):
-                power_s[j,k] = (Er[k+1,j]**2+Ei[k+1,j]**2)*Kai/(density*kappa_1)*Pbeam
-            power_z[j] = np.sum(Er[:,j]**2+Ei[:,j]**2)*Kai/(density*kappa_1)*Pbeam/s_steps
+                power_s[j,k] = (Er[k+1,j]**2+Ei[k+1,j]**2)*Kai[j]/(density*kappa_1[j])*Pbeam
+            power_z[j] = np.sum(Er[:,j]**2+Ei[:,j]**2)*Kai[j]/(density*kappa_1[j])*Pbeam/s_steps
             gamavg[j] = np.sum(gam[:,j+1])/npart                                # average electron energy at every z position
             thet_out=0                                                          # don't output phase space
             gam_out=0
         detune = 2*np.pi/(dels*s_steps)*np.arange(-s_steps/2,s_steps/2+1)
-        field = (Er[:,z_steps]+Ei[:,z_steps]*1j)*np.sqrt(Kai/(density*kappa_1)*Pbeam)
-        field_s = (Er[:,:]+Ei[:,:]*1j)*np.sqrt(Kai/(density*kappa_1)*Pbeam)
+        field = (Er[:,z_steps]+Ei[:,z_steps]*1j)*np.sqrt(Kai[z_steps-1]/(density*kappa_1[z_steps-1])*Pbeam)
+        field_s = (Er[:,:]+Ei[:,:]*1j)*np.sqrt(np.concatenate((np.array([Kai[0]]),Kai))[np.newaxis,:]/(density*np.concatenate((np.array([kappa_1[0]]),kappa_1))[np.newaxis,:]*Pbeam))
         pfft = np.fft.fft(field_s[:,1:],axis=1)
         spectrum = np.fft.fftshift(np.absolute(pfft)**2)
         omega=hbar * 2.0 * np.pi / (resWavelength/c)
