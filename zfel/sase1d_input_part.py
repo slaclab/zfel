@@ -97,7 +97,6 @@ def sase(inp_struct):
               /(2*sigmaX2))**(1/3)                          # FEL Pierce parameter
     resWavelength = unduPeriod*(1+unduK[0]**2/2.0)\
                     /(2*gamma0**2)                          # resonant wavelength
-    print(resWavelength)
 
     Pbeam   = energy*currentMax*1000.0               # rho times beam power [GW]
     coopLength = resWavelength/unduPeriod                # cooperation length
@@ -113,12 +112,7 @@ def sase(inp_struct):
     Ns    = currentMax*unduL/unduPeriod/z_steps\
             *resWavelength/c/e                              # N electrons per s-slice [ ]
     #Eloss = -dEdz*1E-3/energy/rho*gainLength                # convert dEdz to alpha parameter
-    s = np.arange(1,s_steps+1)*dels*coopLength*1.0e6        # longitundinal steps along beam in micron ? meter           
-    z = np.arange(1,z_steps+1)*delt*gainLength              # longitundinal steps along undulator in meter
-
-    bunchLength=s[-1]*1e-6                              # beam length in meter
-    bunch_steps=np.round(bunchLength/delt/coopLength)       # rms (Gaussian) or half width (flattop) bunch length in s_step
-
+    
     #load buckets
     bucket_data=general_load_bucket.general_load_bucket(npart\
         ,Ns,coopLength,particle_position,s_steps,dels,hist_rule,gbar,delg,iopt)
@@ -126,6 +120,14 @@ def sase(inp_struct):
     thet_init=bucket_data['thet_init']
     gam_init=bucket_data['gam_init']
     N_real=bucket_data['N_real']
+    s_steps=bucket_data['s_steps']
+    s = np.arange(1,s_steps+1)*dels*coopLength*1.0e6        # longitundinal steps along beam in micron ? meter           
+    z = np.arange(1,z_steps+1)*delt*gainLength              # longitundinal steps along undulator in meter
+
+    bunchLength=s[-1]*1e-6                              # beam length in meter
+    bunch_steps=np.round(bunchLength/delt/coopLength)       # rms (Gaussian) or half width (flattop) bunch length in s_step
+
+
     shape=N_real/np.max(N_real)
     #shape= 0.5*(np.tanh(10*(np.arange(1,s_steps+1)\
     #       -s_steps/2+bunch_steps)/bunch_steps)\
@@ -135,7 +137,6 @@ def sase(inp_struct):
     plt.plot(shape)
 
     deta = np.sqrt((1+0.5*unduK[0]**2)/(1+0.5*unduK**2))-1
-    print(deta)
 
 
     # sase mode is chosen, go over all slices of the bunch starting from the tail k=1

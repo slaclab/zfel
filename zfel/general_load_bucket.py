@@ -33,7 +33,7 @@ def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_
         #load particle information and classify them to different intervals
         s_all=particle_position[:,0]
         gam_all=particle_position[:,1]
-        #gam_all=np.random.randn(s_steps*npart)*0.01+100
+        s_steps=int(np.max(s_all)/(dels*coopLength))+1 if np.max(s_all)%(dels*coopLength)!=0 else np.max(s_all)/(dels*coopLength)
         N_input=np.zeros(s_steps)
         gam_step=[[] for x in range(s_steps)]
         for k in range(s_all.shape[0]):
@@ -45,15 +45,19 @@ def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_
         thet_init=np.zeros((s_steps,npart))
         gam_init=np.zeros((s_steps,npart))
         for k in range(s_steps):
-            thet_init[k,:]=make_theta(npart,N_real[k])
-            gam_init[k,:]=make_gamma(gam_step[k],npart,hist_rule)
+            if N_real[k]==0:
+                thet_init[k,:]=np.random.rand(1)*2*np.pi
+                gam_init[k,:]=np.zeros(npart)
+            else:
+                thet_init[k,:]=make_theta(npart,N_real[k])
+                gam_init[k,:]=make_gamma(gam_step[k],npart,hist_rule)
         #if np.min(gam_step)==np.max(gam_step):
             #deal with the case that all input gamma values are the same
             #gam_init=np.ones((s_steps,npart))*np.max(gam_step)
             #print('Warning, all input gamma values are the same!')
 
 
-    return {'thet_init':thet_init,'gam_init':gam_init,'N_real':N_real}
+    return {'thet_init':thet_init,'gam_init':gam_init,'N_real':N_real,'s_steps':s_steps}
 
 
 
@@ -136,6 +140,7 @@ def make_gamma(gam_step_bucket,npart,hist_rule='square-root'):
     outputs:
     gam_sampled         # sampled macro particles energy in a bucket
     '''
+
     lowbound=np.min(gam_step_bucket)
     upbound=np.max(gam_step_bucket)+1e-10
     pts=len(gam_step_bucket)
@@ -147,9 +152,9 @@ def make_gamma(gam_step_bucket,npart,hist_rule='square-root'):
         hist_num=int(2*pts**(1/3))
     gam_hist=np.zeros(hist_num)
     gam_hist,bins=np.histogram(np.array(gam_step_bucket),bins=np.linspace(lowbound, upbound, num=hist_num+1))
-    #plt.figure()
-    #_=plt.hist(np.array(gam_step_bucket),bins=np.linspace(lowbound, upbound, num=hist_num+1))
-    #plt.title('Input gamma histogram')
+        #plt.figure()
+        #_=plt.hist(np.array(gam_step_bucket),bins=np.linspace(lowbound, upbound, num=hist_num+1))
+        #plt.title('Input gamma histogram')
     gam_hist=gam_hist/np.sum(gam_hist)
 
     #make cdf
@@ -158,13 +163,13 @@ def make_gamma(gam_step_bucket,npart,hist_rule='square-root'):
     for j in range(1,hist_num):
         gam_cdf[j]=gam_hist[j]+gam_cdf[j-1]
     gam_cdf=np.concatenate((np.zeros(1),gam_cdf))
-    
+        
     #make gamma
     x=np.random.rand(npart)
     gam_sampled=np.interp(x, gam_cdf, bins)
-    #plt.figure()
-    #_=plt.hist(gam_sampled,bins=np.linspace(lowbound, upbound, num=hist_num+1))
-    #plt.title('Sampled gamma histogram')
+        #plt.figure()
+        #_=plt.hist(gam_sampled,bins=np.linspace(lowbound, upbound, num=hist_num+1))
+        #plt.title('Sampled gamma histogram')
     return gam_sampled
 
 
