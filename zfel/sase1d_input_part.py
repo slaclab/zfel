@@ -126,9 +126,10 @@ def params_calc(Nruns,npart,s_steps,z_steps,energy,eSpread,\
     resWavelength = unduPeriod*(1+unduK[0]**2/2.0)\
                     /(2*gamma0**2)                          # resonant wavelength
 
-    Pbeam   = energy*currentMax*1000.0               # rho times beam power [GW]
-    coopLength = resWavelength/unduPeriod                # cooperation length
-    gainLength = 1                                      # rough gain length
+    #Pbeam   = energy*currentMax*1000.0                     # rho times beam power [GW]
+    Pbeam   = energy*currentMax                             # beam power [W]
+    coopLength = resWavelength/unduPeriod                   # cooperation length
+    gainLength = 1                                          # rough gain length
     #cs0  = bunchLength/coopLength                           # bunch length in units of cooperation length     
     z0    = unduL#/gainLength                                # wiggler length in units of gain length
     delt  = z0/z_steps                                      # integration step in z0 ~ 0.1 gain length
@@ -141,6 +142,8 @@ def params_calc(Nruns,npart,s_steps,z_steps,energy,eSpread,\
             *resWavelength/c/e                              # N electrons per s-slice [ ]
     #Eloss = -dEdz*1E-3/energy/rho*gainLength                # convert dEdz to alpha parameter
     deta = np.sqrt((1+0.5*unduK[0]**2)/(1+0.5*unduK**2))-1
+
+
 
     params={'unduJJ':unduJJ,'gamma0':gamma0,'sigmaX2':sigmaX2,'kappa_1':kappa_1,'density':density,\
     'Kai':Kai,'ku':ku,'resWavelength':resWavelength,'Pbeam':Pbeam,'coopLength':coopLength,'z0':z0,\
@@ -164,8 +167,6 @@ def FEL_process(Nruns,npart,z_steps,energy,eSpread,\
     bunchLength=s[-1]*1e-6                              # beam length in meter
     bunch_steps=np.round(bunchLength/delt/coopLength)       # rms (Gaussian) or half width (flattop) bunch length in s_step
     shape=N_real/np.max(N_real)
-    
-
 
     # sase mode is chosen, go over all slices of the bunch starting from the tail k=1
     if iopt=='sase': 
@@ -246,7 +247,7 @@ def plot_log_power_z(history):
     z=history['z']
     power_z=history['power_z']
     plt.figure()
-    plt.plot(z,np.log(power_z))
+    plt.plot(z,np.log10(power_z))
     plt.xlabel('z (m)')
     plt.ylabel('log(P) (W)')
 
