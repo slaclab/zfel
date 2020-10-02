@@ -1,13 +1,9 @@
 import numpy as np
 import scipy
 from scipy import special
-from zfel import general_load_bucket
+#from zfel import general_load_bucket
+from . import general_load_bucket
 import matplotlib.pyplot as plt 
-plt.rc('xtick',labelsize=20)
-plt.rc('ytick',labelsize=20)
-plt.rc('axes',titlesize=20)
-plt.rc('axes',labelsize=20)
-dpi_v=100
 
 # Some constant values
 alfvenCurrent = 17045.0 # Alfven current ~ 17 kA
@@ -185,25 +181,25 @@ def FEL_process(Nruns,npart,z_steps,energy,eSpread,\
         thet_out=np.zeros((s_steps,1))
         bunching=np.zeros((s_steps,z_steps),dtype=complex)
         for k in range(s_steps):
-            Er[k,0] = np.sqrt(E02)                                                          # input seed signal
+            Er[k,0] = np.sqrt(E02)                                              # input seed signal
             Ei[k,0] = 0.0
             thet0=thet_init[k,:]
             eta0=eta_init[k,:]
             eta[:,0] = eta0.T
             thet_output[:,0]=thet0.T                                                   # eta at j=1
-            thethalf[:,0] = thet0.T-2*ku*eta[:,0]*delt/2                                    # half back
+            thethalf[:,0] = thet0.T-2*ku*eta[:,0]*delt/2                             # half back
             thet_out[k,0]=np.mean(thet0.T)
-            for j in range(z_steps):                                                        # evolve e and eta in s and t by leap-frog
+            for j in range(z_steps):                                            # evolve e and eta in s and t by leap-frog
                 thet = thethalf[:,j]+2*ku*(eta[:,j]+deta[j])*delt/2
                 sumsin = np.sum(np.sin(thet))
                 sumcos = np.sum(np.cos(thet))
                 sinavg = shape[k]*sumsin/npart
                 cosavg = shape[k]*sumcos/npart
-                Erhalf = Er[k,j]+kappa_1[j]*density * cosavg*dels/2                                     #minus sign 
+                Erhalf = Er[k,j]+kappa_1[j]*density * cosavg*dels/2   #minus sign 
                 Eihalf = Ei[k,j]-kappa_1[j]*density * sinavg*dels/2               
                 thethalf[:,j+1] = thethalf[:,j]+2*ku*(eta[:,j]+deta[j])*delt
                 eta[:,j+1] = eta[:,j]-2*Kai[j]*Erhalf*np.cos(thethalf[:,j+1])*delt\
-                             +2*Kai[j]*Eihalf*np.sin(thethalf[:,j+1])*delt                                #-Eloss*delt  #Eloss*delt to simulate the taper
+                             +2*Kai[j]*Eihalf*np.sin(thethalf[:,j+1])*delt#-Eloss*delt  #Eloss*delt to simulate the taper
                 thet_output[:,j+1]=thet
                 sumsin = np.sum(np.sin(thethalf[:,j+1]))
                 sumcos = np.sum(np.cos(thethalf[:,j+1]))
@@ -212,7 +208,7 @@ def FEL_process(Nruns,npart,z_steps,energy,eSpread,\
                 Er[k+1,j+1] = Er[k,j]+kappa_1[j]*density *cosavg*dels                               # apply slippage condition
                 Ei[k+1,j+1] = Ei[k,j]-kappa_1[j]*density *sinavg*dels
                 bunching[k,j]=np.mean(np.real(np.exp(-1j*thet)))\
-                              +np.mean(np.imag(np.exp(-1j*thet)))*1j                                    #bunching factor calculation
+                              +np.mean(np.imag(np.exp(-1j*thet)))*1j            #bunching factor calculation
     return {'Er':Er,'Ei':Ei,'thet_output':thet_output,'eta':eta,'s':s,'z':z,'bunching':bunching,'bunchLength':bunchLength}
 
 def final_calc(Nruns,npart,z_steps,energy,eSpread,\
@@ -256,7 +252,6 @@ def plot_log_power_z(history):
     plt.plot(z,np.log10(power_z))
     plt.xlabel('z (m)')
     plt.ylabel('log(P) (W)')
-    #plt.savefig('./Figures/log(power) versus undulator position',dpi=dpi_v)
 
 def plot_power_s(history):
     s=history['s']
@@ -276,16 +271,15 @@ def plot_phase_space(history):
     for j in range(z.shape[0]):
         plt.figure()
         plt.plot(thet_output[:,j],eta[:,j],'.')
-        plt.xlabel(r'$\theta$')
-        plt.ylabel(r'$\eta$')
+        plt.xlabel('theta')
+        plt.ylabel('eta')
         if iopt=='seeded':
             plt.axis([-np.pi,np.pi,-5,5])
         else:
             pass
             #plt.axis([0,9,8400000,8500000])
             #plt.axis([0,9,-2.5,2.5])
-        plt.title('z (m) = '+str(np.round(z[j],2)))
-        #plt.savefig('./Figures/phase_space,z='+str(np.round(z[j],2),dpi=dpi_v)
+        plt.title('undulator distance (m) = '+str(z[j]))
         #pause(.02)
 
 def plot_pspec(history):

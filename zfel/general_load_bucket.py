@@ -112,6 +112,7 @@ def make_theta(n,N_real_bucket):
     outputs:
     thet            # macro particles position in a bucket
     '''
+    
     thet=np.zeros(n)
     M=32  # number of particles in each beamlet
     nb= int(np.round(n/M) )    #number of beamlet via Fawley between 64 to 256 (x16=1024 to 4096)
