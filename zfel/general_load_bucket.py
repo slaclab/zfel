@@ -84,8 +84,8 @@ def load_bucket(n,gbar,delg,iopt,Ns):
         if M*nb!=n:
             raise ValueError('n must be a multiple of 4')
         for i in range(nb):
-            #etaa=delg*np.random.randn(1)+gbar
-            etaa=delg*(np.random.rand(1)-0.5)+gbar
+            etaa=delg*np.random.randn(1)+gbar
+            #etaa=delg*(np.random.rand(1)-0.5)+gbar
             for j in range(M):
                 eta[i*M+j]=etaa
                 thet[i*M+j]=2*np.pi*(j+1)/M
@@ -96,8 +96,8 @@ def load_bucket(n,gbar,delg,iopt,Ns):
             raise ValueError('n must be a multiple of 4')
         effnoise = np.sqrt(3*M/(Ns/nb))    # Penman algorithm for Ns/nb >> M
         for i in range(nb):
-            #etaa=delg*np.random.randn(1)+gbar
-            etaa=delg*(np.random.rand(1)-0.5)+gbar
+            etaa=delg*np.random.randn(1)+gbar
+            #etaa=delg*(np.random.rand(1)-0.5)+gbar
             for j in range(M):
                 eta[i*M+j]=etaa
                 thet[i*M+j]=2*np.pi*(j+1)/M+2*np.random.rand(1)*effnoise
@@ -112,7 +112,6 @@ def make_theta(n,N_real_bucket):
     outputs:
     thet            # macro particles position in a bucket
     '''
-    
     thet=np.zeros(n)
     M=32  # number of particles in each beamlet
     nb= int(np.round(n/M) )    #number of beamlet via Fawley between 64 to 256 (x16=1024 to 4096)
