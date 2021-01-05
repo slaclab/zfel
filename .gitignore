@@ -1,15 +1,66 @@
-*/*.ipynb_checkpoints*
-devel/*
-.DS_Store
-.ipynb_checkpoints/Untitled-checkpoint.ipynb
-examples/.ipynb_checkpoints/sase1d_run-checkpoint.ipynb
-*.pyc
-General_test/.ipynb_checkpoints/sase1d-checkpoint.py
-General_test/.ipynb_checkpoints/sase1d_run-checkpoint.ipynb
-General_test/.ipynb_checkpoints/SASE_test-checkpoint.py
-General_test/.ipynb_checkpoints/sase1d_run-checkpoint.ipynb
-General_test/test/.ipynb_checkpoints/z_and_power_z-checkpoint.correct
-General_test/test/.ipynb_checkpoints/z_and_power_z-checkpoint.now
-General_test/.ipynb_checkpoints/sase1d_run-checkpoint.ipynb
-General_test/test/z_and_power_z.now
-regression_test/.ipynb_checkpoints/Annotation of the 1D FEL-checkpoint.ipynb
+.#*
+\#*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+.ipynb_checkpoints/
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+node_modules/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+.idea/*
+
+# Vscode
+.vscode/
