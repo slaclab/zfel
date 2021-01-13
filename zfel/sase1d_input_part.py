@@ -79,27 +79,8 @@ def sase(inp_struct):
     final_params.update(FEL_data)
     final_params.update(FEL_params)
     final_data=final_calc(**final_params)
-
-    #unpack outputs
-    gainLength=params['gainLength']
-    resWavelength=params['resWavelength']
-    thet_out=final_data['thet_out']
-    eta_out=final_data['eta_out']
-    bunching=FEL_data['bunching']
-    
-    Ns=params['Ns']
-    history=final_data['history']
-    spectrum=history['spectrum']
-    freq=history['freq']
-    z=history['z']
-    power_z=history['power_z']
-    s=history['s']
-    power_s=history['power_s']
-    rho=history['rho']
-    detune=history['detune']
-    field=history['field']
-    field_s=history['field_s']
-    return z,power_z,s,power_s,rho,detune,field,field_s,gainLength,resWavelength,thet_out,eta_out,bunching,spectrum,freq,Ns,history
+        
+    return final_data
 
 def params_calc(Nruns,npart,s_steps,z_steps,energy,eSpread,\
             emitN,currentMax,beta,unduPeriod,unduK,unduL,radWavelength,\
