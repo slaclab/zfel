@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_rule,gbar=None,delg=None,iopt=None,):
+def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_rule,gbar=None,delg=None,iopt=None):
     '''
     random initialization of the beam load_bucket
     inputs:
