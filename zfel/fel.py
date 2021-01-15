@@ -104,6 +104,7 @@ def FEL_process_complex(npart,
 
     shape = N_real/np.max(N_real) # 
 
+    
     # initialization of variables during the 1D FEL process
     E  = np.zeros((s_steps+1,z_steps+1),dtype=complex) 
     eta = np.zeros((npart,z_steps+1))
@@ -111,6 +112,8 @@ def FEL_process_complex(npart,
     thethalf    = np.zeros((npart,z_steps+1))
     thet_out    = np.zeros((s_steps,1))
     bunching    = np.zeros((s_steps,z_steps),dtype=complex)
+    
+    # Loop over slices, starting at the back of the bunch
     for k in range(s_steps):
         E[k,0]  = np.sqrt(E02)                                     # input seed signal
         thet0    = thet_init[k,:]
@@ -119,14 +122,17 @@ def FEL_process_complex(npart,
         thet_output[:,0] = thet0.T                                  # eta at j=1
         thethalf[:,0]    = thet0.T-2*ku*eta[:,0]*delt/2             # half back
         thet_out[k,0]    = np.mean(thet0.T)
+
+        # Loop over z 
         for j in range(z_steps):                                    # evolve E and eta in s and t by leap-frog
+
             thet   = thethalf[:,j]+2*ku*(eta[:,j]+deta[j])*delt/2
             
             Ehalf = E[k,j] + kappa_1[j]*shape[k]*density*np.mean(np.exp(-1j*thet))*dels/2  # minus sign, assumes electrons?
                         
             thethalf[:,j+1] = thethalf[:,j]+2*ku*(eta[:,j]+deta[j])*delt  
             
-            eta[:,j+1] = eta[:,j]-2*Kai[j]*delt*np.real(Ehalf*np.exp(1j*thethalf[:,j+1]))
+            eta[:,j+1] = eta[:,j]-Kai[j]*delt * 2*np.real(Ehalf*np.exp(1j*thethalf[:,j+1]))
                     
             E[k+1,j+1] = E[k,j]+kappa_1[j]*shape[k]*density*np.mean(np.exp(-1j*thethalf[:,j+1]))*dels  # apply slippage condition
              

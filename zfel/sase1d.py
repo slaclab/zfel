@@ -58,12 +58,11 @@ def sase(inp_struct):
     freq                        # frequency in eV
     Ns                          # real number of examples
     '''
-    
-    
+        
     #calculating intermediate parameters    
     params=params_calc(**inp_struct)
-    
-    #loaduckets
+
+    # Load Buckets
     bucket_params={'npart':inp_struct['npart']
         ,'Ns':params['Ns'],'coopLength':params['coopLength'],\
         'particle_position':inp_struct['particle_position'],'s_steps':inp_struct['s_steps'],\
@@ -74,6 +73,7 @@ def sase(inp_struct):
     # Convenience
     i = inp_struct
     p = params
+
     
     # FEL process
     FEL_data=FEL_process_complex(
@@ -129,7 +129,8 @@ def sase(inp_struct):
     return output
     
 
-def params_calc(npart=512,
+def params_calc(*,  # Require kwargs explicitly to avoid typos
+                npart=512,
                 s_steps=200,
                 z_steps=200,
                 energy=4313.34e6,
@@ -153,9 +154,9 @@ def params_calc(npart=512,
     if random_seed is not None:
         np.random.seed(random_seed)
 
-    #Check if unduK is array
+    #Check if unduK is array. Otherwise, fill it out. 
     if not isinstance(unduK, np.ndarray):
-        unduK = unduK*np.array([1])
+        unduK = np.full(z_steps, unduK)
 
     unduJJ  = scipy.special.jv(0,unduK**2/(4+2*unduK**2))\
               -scipy.special.jv(1,unduK**2/(4+2*unduK**2))  # undulator JJ
@@ -163,9 +164,9 @@ def params_calc(npart=512,
     sigmaX2 = emitN*beta/gamma0                             # rms transverse size, divergence of the electron beam
 
     # Needed for FEL_process
-    kappa_1 = e*unduK*unduJJ/4/epsilon_0/gamma0
-    density = currentMax/(e*c*2*np.pi*sigmaX2)
-    Kai     = e*unduK*unduJJ/(2*gamma0**2*mc2*e)
+    kappa_1 = e*unduK*unduJJ/4/epsilon_0/gamma0             # Eq. 4.10 in Kim, Huang, Lindberg (2017)
+    Kai     = e*unduK*unduJJ/(2*gamma0**2*mc2*e)            # Ibid.
+    density = currentMax/(e*c*2*np.pi*sigmaX2)               
     ku      = 2*np.pi/unduPeriod
 
 
@@ -192,9 +193,9 @@ def params_calc(npart=512,
     delg  = eSpread                                         # Gaussian energy spread in units of rho 
     Ns    = currentMax*unduL/unduPeriod/z_steps\
             *resWavelength/c/e                              # N electrons per s-slice [ ]
-    #Eloss = -dEdz*1E-3/energy/rho*gainLength               # convert dEdz to alpha parameter
+    
     deta  = np.sqrt((1+0.5*unduK[0]**2)/(1+0.5*unduK**2))-1
-
+    
     params={
         'unduJJ':unduJJ,
         'gamma0':gamma0,
@@ -215,7 +216,7 @@ def params_calc(npart=512,
         'Ns':Ns,
         'deta':deta,
         'rho':rho}
-#        'gainLength':gainLength}
+
 
     return params
 
