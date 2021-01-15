@@ -122,13 +122,13 @@ def FEL_process_complex(npart,
         for j in range(z_steps):                                    # evolve E and eta in s and t by leap-frog
             thet   = thethalf[:,j]+2*ku*(eta[:,j]+deta[j])*delt/2
             
-            Ehalf = E[k,j] + kappa_1[j]*density*np.mean(np.exp(-1j*thet))*dels/2  # minus sign, assumes electrons?
+            Ehalf = E[k,j] + kappa_1[j]*shape[k]*density*np.mean(np.exp(-1j*thet))*dels/2  # minus sign, assumes electrons?
                         
             thethalf[:,j+1] = thethalf[:,j]+2*ku*(eta[:,j]+deta[j])*delt  
             
             eta[:,j+1] = eta[:,j]-2*Kai[j]*delt*np.real(Ehalf*np.exp(1j*thethalf[:,j+1]))
                     
-            E[k+1,j+1] = E[k,j]+kappa_1[j]*density*np.mean(np.exp(-1j*thethalf[:,j+1]))*dels  # apply slippage condition
+            E[k+1,j+1] = E[k,j]+kappa_1[j]*shape[k]*density*np.mean(np.exp(-1j*thethalf[:,j+1]))*dels  # apply slippage condition
              
             thet_output[:,j+1] = thet # Save for output                
             
