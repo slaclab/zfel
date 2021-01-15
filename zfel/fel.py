@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def FEL_process(npart,
+def FEL_process_real(npart,
                 z_steps,
                 kappa_1,
                 density,
@@ -75,6 +75,75 @@ def FEL_process(npart,
 
             
     return output
+
+
+def FEL_process_complex(npart,
+                z_steps,
+                kappa_1,
+                density,
+                Kai,
+                ku,
+                delt,
+                dels,    
+                deta,
+                thet_init,
+                eta_init,
+                N_real,
+                s_steps,
+                E02=0,
+                verbose=False):  
+    """
+    SASE FEL process.
+    
+    (opt=='sase')
+    
+    """
+    
+    if verbose:
+        print('FEL_process')
+
+    shape = N_real/np.max(N_real) # 
+
+    # initialization of variables during the 1D FEL process
+    E  = np.zeros((s_steps+1,z_steps+1),dtype=complex) 
+    eta = np.zeros((npart,z_steps+1))
+    thet_output = np.zeros((npart,z_steps+1))
+    thethalf    = np.zeros((npart,z_steps+1))
+    thet_out    = np.zeros((s_steps,1))
+    bunching    = np.zeros((s_steps,z_steps),dtype=complex)
+    for k in range(s_steps):
+        E[k,0]  = np.sqrt(E02)                                     # input seed signal
+        thet0    = thet_init[k,:]
+        eta0     = eta_init[k,:]
+        eta[:,0] = eta0.T
+        thet_output[:,0] = thet0.T                                  # eta at j=1
+        thethalf[:,0]    = thet0.T-2*ku*eta[:,0]*delt/2             # half back
+        thet_out[k,0]    = np.mean(thet0.T)
+        for j in range(z_steps):                                    # evolve E and eta in s and t by leap-frog
+            thet   = thethalf[:,j]+2*ku*(eta[:,j]+deta[j])*delt/2
+            
+            Ehalf = E[k,j] + kappa_1[j]*density*np.mean(np.exp(-1j*thet))*dels/2  # minus sign, assumes electrons?
+                        
+            thethalf[:,j+1] = thethalf[:,j]+2*ku*(eta[:,j]+deta[j])*delt  
+            
+            eta[:,j+1] = eta[:,j]-2*Kai[j]*delt*np.real(Ehalf*np.exp(1j*thethalf[:,j+1]))
+                    
+            E[k+1,j+1] = E[k,j]+kappa_1[j]*density*np.mean(np.exp(-1j*thethalf[:,j+1]))*dels  # apply slippage condition
+             
+            thet_output[:,j+1] = thet # Save for output                
+            
+            bunching[k,j] = np.mean(np.exp(1j*thet)) #bunching factor calculation    
+
+    output = {}
+    output['Er'] = np.real(E)
+    output['Ei'] = np.imag(E) 
+    output['thet'] = thet_output
+    output['eta'] = eta
+
+            
+    return output
+
+
 
 
 

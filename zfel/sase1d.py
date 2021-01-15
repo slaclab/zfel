@@ -3,7 +3,7 @@ import scipy
 from scipy import special
 
 from zfel.particles import general_load_bucket
-from zfel.fel import FEL_process, final_calc
+from zfel.fel import FEL_process_complex, final_calc
 import matplotlib.pyplot as plt 
 
 # Some constant values
@@ -76,7 +76,7 @@ def sase(inp_struct):
     p = params
     
     # FEL process
-    FEL_data=FEL_process(
+    FEL_data=FEL_process_complex(
                 i['npart'],
                 i['z_steps'],
                 p['kappa_1'],
@@ -162,6 +162,7 @@ def params_calc(npart=512,
     gamma0  = energy/mc2                                    # central energy of the beam in unit of mc2
     sigmaX2 = emitN*beta/gamma0                             # rms transverse size, divergence of the electron beam
 
+    # Needed for FEL_process
     kappa_1 = e*unduK*unduJJ/4/epsilon_0/gamma0
     density = currentMax/(e*c*2*np.pi*sigmaX2)
     Kai     = e*unduK*unduJJ/(2*gamma0**2*mc2*e)
