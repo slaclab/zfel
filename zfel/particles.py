@@ -8,7 +8,7 @@ def general_load_bucket(npart,
                         dels,
                         hist_rule='square-root',
                         particle_position=None,
-                        gbar=None,
+                        gbar=0,
                         delg=None,
                         iopt='sase'):
     '''

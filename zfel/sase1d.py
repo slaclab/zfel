@@ -18,27 +18,29 @@ hbar=6.582e-16          #in eV
 def sase(inp_struct):
     '''
     SASE 1D FEL run function
+    TODO: needs updating
     Input:
     npart                       # n-macro-particles per bucket 
     s_steps                     # n-sample points along bunch length
     z_steps                     # n-sample points along undulator
-    energy                      # electron energy [MeV]
-    eSpread                     # relative rms energy spread [ ]
-    emitN                       # normalized transverse emittance [mm-mrad]
+    energy                      # electron energy [eV]
+    eSpread                     # relative rms energy spread [1]
+    emitN                       # normalized transverse emittance [m-rad]
     currentMax                  # peak current [Ampere]
     beta                        # mean beta [meter]
     unduPeriod                  # undulator period [meter]
-    unduK                       # undulator parameter, K [ ]
+    unduK                       # undulator parameter, K [1]
     unduL                       # length of undulator [meter]
     radWavelength               # seed wavelength? [meter], used only in single-freuqency runs
     dEdz                        # rate of relative energy gain or taper [keV/m], optimal~130
     iopt                        # 'sase' or 'seeded'
     P0                          # small seed input power [W]
-    constseed                   # whether we want to use constant  random seed for reproducibility, 1 Yes, 0 No
-    particle_position           # particle information with positions in meter and eta
+    random_seed                 # A random number seed. Default: None
+    particle_position           # particle information with positions in meter and eta. Default: None
     hist_rule                   # different rules to select number of intervals to generate the histogram of eta value in a bucket
 
     Output:
+    (TODO: needs updating)
     z                           # longitudinal steps along undulator
     power_z                     # power profile along undulator                    
     s                           # longitudinal steps along beam
@@ -53,10 +55,12 @@ def sase(inp_struct):
     eta_out                     # output energy in unit of mc2
     bunching                    # bunching factor
     spectrum                    # spectrum power
-    freq                        # frequency in ev
+    freq                        # frequency in eV
     Ns                          # real number of examples
     '''
-    #calculating intermediate parameters
+    
+    
+    #calculating intermediate parameters    
     params=params_calc(**inp_struct)
     
     #loaduckets
@@ -104,10 +108,12 @@ def sase(inp_struct):
     # Collect output
     output = FEL_data
     output.update(final_data)
+    output['params'] = params
+    
     
     # Extra (put somewhere else)
     s = np.arange(1,i['s_steps']+1)*p['dels']*p['coopLength']       # longitundinal steps along beam in m      
-    z = np.arange(1,i['z_steps']+1)*p['delt']*p['gainLength']       # longitundinal steps along undulator in meter
+    z = np.arange(1,i['z_steps']+1)*p['delt']       # longitundinal steps along undulator in meter
     bunchLength = s[-1]                                            # beam length in meter
     bunch_steps = np.round(bunchLength/p['delt']/p['coopLength'])   # rms (Gaussian) or half width (flattop) bunch length in s_step   
     output['s'] = s
@@ -123,15 +129,29 @@ def sase(inp_struct):
     return output
     
 
-def params_calc(npart,s_steps,z_steps,energy,eSpread,\
-            emitN,currentMax,beta,unduPeriod,unduK,unduL,radWavelength,\
-            dEdz,iopt,P0,constseed,particle_position,hist_rule):
+def params_calc(npart=512,
+                s_steps=200,
+                z_steps=200,
+                energy=4313.34e6,
+                eSpread=0,
+                emitN=1.2e-6,
+                currentMax=3400,
+                beta=26,
+                unduPeriod=0.03,
+                unduK=3.5,
+                unduL=70,
+                iopt='sase',
+                P0=0,
+                random_seed=None,
+                particle_position=None,
+                radWavelength=None,
+                hist_rule='square-root'):
     '''
     calculating intermediate parameters
     '''
     # whether to use constant random seed for reproducibility
-    if constseed==1:
-        np.random.seed(31)
+    if random_seed is not None:
+        np.random.seed(random_seed)
 
     #Check if unduK is array
     if not isinstance(unduK, np.ndarray):
@@ -154,18 +174,20 @@ def params_calc(npart,s_steps,z_steps,energy,eSpread,\
     
     resWavelength = unduPeriod*(1+unduK[0]**2/2.0)\
                     /(2*gamma0**2)                          # resonant wavelength
-
-    #Pbeam   = energy*currentMax*1000.0                     # rho times beam power [GW]
+    
+    
+    if radWavelength is None:
+        radWavelength=resWavelength
+    
     Pbeam      = energy*currentMax                          # beam power [W]
     coopLength = resWavelength/unduPeriod                   # cooperation length
-    gainLength = 1                                          # rough gain length
     #cs0  = bunchLength/coopLength                          # bunch length in units of cooperation length     
-    z0    = unduL#/gainLength                               # wiggler length in units of gain length
+    z0    = unduL                                           # wiggler length 
     delt  = z0/z_steps                                      # integration step in z0 ~ 0.1 gain length
     dels  = delt                                            # integration step in s0 must be same as in z0 
     E02   = density*kappa_1[0]*P0/Pbeam/Kai[0]              # scaled input power
-    gbar  = (resWavelength-radWavelength)\
-            /(radWavelength)                                # scaled detune parameter
+    gbar  = resWavelength/radWavelength -1.0                 # scaled detune parameter
+                         
     delg  = eSpread                                         # Gaussian energy spread in units of rho 
     Ns    = currentMax*unduL/unduPeriod/z_steps\
             *resWavelength/c/e                              # N electrons per s-slice [ ]
@@ -191,8 +213,8 @@ def params_calc(npart,s_steps,z_steps,energy,eSpread,\
         'delg':delg,
         'Ns':Ns,
         'deta':deta,
-        'rho':rho,
-        'gainLength':gainLength}
+        'rho':rho}
+#        'gainLength':gainLength}
 
     return params
 
