@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_rule,gbar=None,delg=None,iopt=None,):
+def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_rule,gbar=None,delg=None,iopt=None):
     '''
     random initialization of the beam load_bucket
     inputs:
@@ -11,53 +11,48 @@ def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_
     iopt                # 'sase' or 'seeded'
     Ns                  # N electrons per s-slice at maximum current
     coopLength          # cooperation length
-    particle_position   # particle information with positions in meter and gamma
+    particle_position   # particle information with positions in meter and eta
     s_steps             # n-sample points along bunch length
     dels                # integration step in s0
-    hist_rule           # different rules to select number of intervals to generate the histogram of gamma value in a bucket
+    hist_rule           # different rules to select number of intervals to generate the histogram of eta value in a bucket
 
     outputs:
     thet_init           # all buckets macro particles position
-    gam_init            # all buckets macro particles energy
+    eta_init            # all buckets macro particles relative energy
     N_real              # real number of particles along the beam
     '''
     if particle_position is None:
         thet_init=np.zeros((s_steps,npart))
-        gam_init=np.zeros((s_steps,npart))
+        eta_init=np.zeros((s_steps,npart))
         for j in range(s_steps):
-            [thet0,gam0] = load_bucket(npart,gbar,delg,iopt,Ns)     # load each bucket
+            [thet0,eta0] = load_bucket(npart,gbar,delg,iopt,Ns)     # load each bucket
             thet_init[j,:]=thet0
-            gam_init[j,:]=gam0
+            eta_init[j,:]=eta0
         N_real=np.ones(s_steps)
     else:
         #load particle information and classify them to different intervals
         s_all=particle_position[:,0]
-        gam_all=particle_position[:,1]
+        eta_all=particle_position[:,1]
         s_steps=int(np.max(s_all)/(dels*coopLength))+1 if np.max(s_all)%(dels*coopLength)!=0 else np.max(s_all)/(dels*coopLength)
         N_input=np.zeros(s_steps)
-        gam_step=[[] for x in range(s_steps)]
+        eta_step=[[] for x in range(s_steps)]
         for k in range(s_all.shape[0]):
             location=int(s_all[k]/(dels*coopLength))
             N_input[location]+=1
-            gam_step[location].append(gam_all[k])
+            eta_step[location].append(eta_all[k])
         N_real=N_input/np.max(N_input)*Ns
-        #generate theta and gamma
+        #generate theta and eta
         thet_init=np.zeros((s_steps,npart))
-        gam_init=np.zeros((s_steps,npart))
+        eta_init=np.zeros((s_steps,npart))
         for k in range(s_steps):
             if N_real[k]==0:
                 thet_init[k,:]=np.random.rand(1)*2*np.pi
-                gam_init[k,:]=np.zeros(npart)
+                eta_init[k,:]=np.zeros(npart)
             else:
                 thet_init[k,:]=make_theta(npart,N_real[k])
-                gam_init[k,:]=make_gamma(gam_step[k],npart,hist_rule)
-        #if np.min(gam_step)==np.max(gam_step):
-            #deal with the case that all input gamma values are the same
-            #gam_init=np.ones((s_steps,npart))*np.max(gam_step)
-            #print('Warning, all input gamma values are the same!')
+                eta_init[k,:]=make_eta(eta_step[k],npart,hist_rule)
 
-
-    return {'thet_init':thet_init,'gam_init':gam_init,'N_real':N_real,'s_steps':s_steps}
+    return {'thet_init':thet_init,'eta_init':eta_init,'N_real':N_real,'s_steps':s_steps}
 
 
 
@@ -73,7 +68,7 @@ def load_bucket(n,gbar,delg,iopt,Ns):
     Ns              # N electrons per s-slice
     outputs:
     thet            # bucket macro particles position
-    gam             # bucket macro particles energy
+    eta             # bucket macro particles relative energy
     '''
     nmax = 10000;
     if n>nmax:
@@ -81,7 +76,7 @@ def load_bucket(n,gbar,delg,iopt,Ns):
 
     #print('load random bucket!!!')
 
-    gam=np.zeros(n)
+    eta=np.zeros(n)
     thet=np.zeros(n)
     if iopt=='seeded':
         M=128                                               # number of particles in each beamlet
@@ -89,10 +84,10 @@ def load_bucket(n,gbar,delg,iopt,Ns):
         if M*nb!=n:
             raise ValueError('n must be a multiple of 4')
         for i in range(nb):
-            #gamma=delg*np.random.randn(1)+gbar
-            gamma=delg*(np.random.rand(1)-0.5)+gbar
+            etaa=delg*np.random.randn(1)+gbar
+            #etaa=delg*(np.random.rand(1)-0.5)+gbar
             for j in range(M):
-                gam[i*M+j]=gamma
+                eta[i*M+j]=etaa
                 thet[i*M+j]=2*np.pi*(j+1)/M
     elif iopt=='sase':
         M=32  # number of particles in each beamlet
@@ -101,12 +96,12 @@ def load_bucket(n,gbar,delg,iopt,Ns):
             raise ValueError('n must be a multiple of 4')
         effnoise = np.sqrt(3*M/(Ns/nb))    # Penman algorithm for Ns/nb >> M
         for i in range(nb):
-            #gamma=delg*np.random.randn(1)+gbar
-            gamma=delg*(np.random.rand(1)-0.5)+gbar
+            etaa=delg*np.random.randn(1)+gbar
+            #etaa=delg*(np.random.rand(1)-0.5)+gbar
             for j in range(M):
-                gam[i*M+j]=gamma
+                eta[i*M+j]=etaa
                 thet[i*M+j]=2*np.pi*(j+1)/M+2*np.random.rand(1)*effnoise
-    return thet,gam
+    return thet,eta
 
 def make_theta(n,N_real_bucket):
     '''
@@ -132,44 +127,44 @@ def make_theta(n,N_real_bucket):
 
 
 
-def make_gamma(gam_step_bucket,npart,hist_rule='square-root'):
+def make_eta(eta_step_bucket,npart,hist_rule='square-root'):
     '''
-    gam_step_bucket     # input particles' gamma values in a bucket
+    eta_step_bucket     # input particles' eta values in a bucket
     npart               # n-macro-particles per bucket
-    hist_rule          # different rules to select number of intervals to generate the histogram of gamma value in a bucket
+    hist_rule          # different rules to select number of intervals to generate the histogram of eta value in a bucket
     outputs:
-    gam_sampled         # sampled macro particles energy in a bucket
+    eta_sampled         # sampled macro particles relative energy in a bucket
     '''
 
-    lowbound=np.min(gam_step_bucket)
-    upbound=np.max(gam_step_bucket)+1e-10
-    pts=len(gam_step_bucket)
+    lowbound=np.min(eta_step_bucket)
+    upbound=np.max(eta_step_bucket)+1e-10
+    pts=len(eta_step_bucket)
     if hist_rule == 'square-root':
         hist_num=int(np.sqrt(pts))
     elif hist_rule=='sturges':
         hist_num=int(np.log2(pts))+1
     elif hist_rule=='rice-rule':
         hist_num=int(2*pts**(1/3))
-    gam_hist=np.zeros(hist_num)
-    gam_hist,bins=np.histogram(np.array(gam_step_bucket),bins=np.linspace(lowbound, upbound, num=hist_num+1))
+    eta_hist=np.zeros(hist_num)
+    eta_hist,bins=np.histogram(np.array(eta_step_bucket),bins=np.linspace(lowbound, upbound, num=hist_num+1))
         #plt.figure()
-        #_=plt.hist(np.array(gam_step_bucket),bins=np.linspace(lowbound, upbound, num=hist_num+1))
-        #plt.title('Input gamma histogram')
-    gam_hist=gam_hist/np.sum(gam_hist)
+        #_=plt.hist(np.array(eta_step_bucket),bins=np.linspace(lowbound, upbound, num=hist_num+1))
+        #plt.title('Input eta histogram')
+    eta_hist=eta_hist/np.sum(eta_hist)
 
     #make cdf
-    gam_cdf=np.zeros(gam_hist.shape)
-    gam_cdf[0]=gam_hist[0]
+    eta_cdf=np.zeros(eta_hist.shape)
+    eta_cdf[0]=eta_hist[0]
     for j in range(1,hist_num):
-        gam_cdf[j]=gam_hist[j]+gam_cdf[j-1]
-    gam_cdf=np.concatenate((np.zeros(1),gam_cdf))
+        eta_cdf[j]=eta_hist[j]+eta_cdf[j-1]
+    eta_cdf=np.concatenate((np.zeros(1),eta_cdf))
         
-    #make gamma
+    #make eta
     x=np.random.rand(npart)
-    gam_sampled=np.interp(x, gam_cdf, bins)
+    eta_sampled=np.interp(x, eta_cdf, bins)
         #plt.figure()
-        #_=plt.hist(gam_sampled,bins=np.linspace(lowbound, upbound, num=hist_num+1))
-        #plt.title('Sampled gamma histogram')
-    return gam_sampled
+        #_=plt.hist(eta_sampled,bins=np.linspace(lowbound, upbound, num=hist_num+1))
+        #plt.title('Sampled eta histogram')
+    return eta_sampled
 
 
