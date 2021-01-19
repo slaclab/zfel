@@ -89,7 +89,8 @@ def sase(inp_struct):
                 bucket_data['thet_init'],
                 bucket_data['eta_init'],
                 bucket_data['N_real'],
-                i['s_steps'])
+                i['s_steps'],
+                E02=p['E02'])
     
     # Finalize
     final_data = final_calc(
