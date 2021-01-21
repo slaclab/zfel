@@ -24,9 +24,9 @@ def FEL_process_real(npart,
     """
     
     if verbose:
-        print('FEL_process')
+        print('FEL_process_real')
 
-    shape = N_real/np.max(N_real) # 
+    shape = N_real/np.max(N_real) # Scaled current profile shape array. 
 
     # initialization of variables during the 1D FEL process
     Er  = np.zeros((s_steps+1,z_steps+1))
@@ -100,9 +100,9 @@ def FEL_process_complex(npart,
     """
     
     if verbose:
-        print('FEL_process')
+        print('FEL_process_complex')
 
-    shape = N_real/np.max(N_real) # 
+    shape = N_real/np.max(N_real) # Scaled current profile shape array.  
 
     
     # initialization of variables during the 1D FEL process
@@ -110,8 +110,12 @@ def FEL_process_complex(npart,
     eta = np.zeros((npart,z_steps+1))
     thet_output = np.zeros((npart,z_steps+1))
     thethalf    = np.zeros((npart,z_steps+1))
-    thet_out    = np.zeros((s_steps,1))
+    #thet_out    = np.zeros((s_steps,1))
     bunching    = np.zeros((s_steps,z_steps),dtype=complex)
+    
+    # Final bunch
+    thet_final  = np.zeros((npart, s_steps))
+    eta_final   = np.zeros((npart, s_steps))
     
     # Loop over slices, starting at the back of the bunch
     for k in range(s_steps):
@@ -121,7 +125,7 @@ def FEL_process_complex(npart,
         eta[:,0] = eta0.T
         thet_output[:,0] = thet0.T                                  # eta at j=1
         thethalf[:,0]    = thet0.T-2*ku*eta[:,0]*delt/2             # half back
-        thet_out[k,0]    = np.mean(thet0.T)
+        #thet_out[k,0]    = np.mean(thet0.T)
 
         # Loop over z 
         for j in range(z_steps):                                    # evolve E and eta in s and t by leap-frog
@@ -139,13 +143,23 @@ def FEL_process_complex(npart,
             thet_output[:,j+1] = thet # Save for output                
             
             bunching[k,j] = np.mean(np.exp(1j*thet)) #bunching factor calculation    
-
+        
+        # Collect final phase space for this slice
+        thet_final[:,k] = thet
+        eta_final[:,k] = eta[:,-1]
+        
+        
+            
     output = {}
     output['Er'] = np.real(E)
     output['Ei'] = np.imag(E) 
-    output['thet'] = thet_output
-    output['eta'] = eta
-
+    #output['thet'] = thet_output
+    output['thet_final'] = thet_final
+    output['eta_final'] = eta_final
+    
+    # eta history of final slice
+    output['theta_final_slice_history'] = thet_output
+    output['eta_final_slice_history'] = eta
             
     return output
 
@@ -156,7 +170,7 @@ def FEL_process_complex(npart,
 def final_calc(
                Er,
                Ei,
-               eta,
+              # eta,
                s_steps,
                z_steps,
                kappa_1,

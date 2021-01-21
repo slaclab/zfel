@@ -96,7 +96,7 @@ def sase(inp_struct):
     final_data = final_calc(
                 FEL_data['Er'],
                FEL_data['Ei'],
-               FEL_data['eta'],
+              # FEL_data['eta'],
                i['s_steps'],
                i['z_steps'],
                p['kappa_1'],

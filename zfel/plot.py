@@ -5,9 +5,10 @@ def plot_log_power_z(history):
     z       = history['z']
     power_z = history['power_z']
     plt.figure()
-    plt.plot(z,np.log10(power_z))
+    plt.yscale('log')
+    plt.plot(z, power_z/1e9)
     plt.xlabel('z (m)')
-    plt.ylabel('log(P) (W)')
+    plt.ylabel('P (GW)')
 
 def plot_power_s(history):
     s = history['s']
