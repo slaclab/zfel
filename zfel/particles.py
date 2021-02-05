@@ -1,7 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_rule,gbar=None,delg=None,iopt=None):
+def general_load_bucket(npart,
+                        Ns,
+                        coopLength,
+                        s_steps,
+                        dels,
+                        hist_rule='square-root',
+                        particle_position=None,
+                        gbar=0,
+                        delg=None,
+                        iopt='sase'):
     '''
     random initialization of the beam load_bucket
     inputs:
@@ -25,7 +34,7 @@ def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_
         thet_init=np.zeros((s_steps,npart))
         eta_init=np.zeros((s_steps,npart))
         for j in range(s_steps):
-            [thet0,eta0] = load_bucket(npart,gbar,delg,iopt,Ns)     # load each bucket
+            [thet0,eta0] = load_bucket(npart,gbar,delg,Ns,iopt=iopt)     # load each bucket
             thet_init[j,:]=thet0
             eta_init[j,:]=eta0
         N_real=np.ones(s_steps)
@@ -57,7 +66,7 @@ def general_load_bucket(npart,Ns,coopLength,particle_position,s_steps,dels,hist_
 
 
 
-def load_bucket(n,gbar,delg,iopt,Ns):
+def load_bucket(n, gbar, delg, Ns, iopt='sase'):
     '''
     random initialization of the beam load_bucket
     inputs:
@@ -73,8 +82,6 @@ def load_bucket(n,gbar,delg,iopt,Ns):
     nmax = 10000;
     if n>nmax:
         raise ValueError('increase nmax, subr load')
-
-    #print('load random bucket!!!')
 
     eta=np.zeros(n)
     thet=np.zeros(n)
@@ -101,9 +108,12 @@ def load_bucket(n,gbar,delg,iopt,Ns):
             for j in range(M):
                 eta[i*M+j]=etaa
                 thet[i*M+j]=2*np.pi*(j+1)/M+2*np.random.rand(1)*effnoise
-    return thet,eta
+    else:
+        raise ValueError(f'Unknown iopt: {iopt}')
+                
+    return thet, eta
 
-def make_theta(n,N_real_bucket):
+def make_theta(n, N_real_bucket):
     '''
     random initialization of a bucket's particle positions
     inputs:
