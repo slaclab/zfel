@@ -4,7 +4,6 @@ from scipy import special
 
 from zfel.particles import general_load_bucket
 from zfel.fel import FEL_process_complex, final_calc
-import matplotlib.pyplot as plt
 
 # Some constant values
 alfvenCurrent = 17045.0  # Alfven current ~ 17 kA
