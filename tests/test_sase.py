@@ -1,10 +1,4 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import random
-import datetime
-import time
 from zfel import sase1d
-
 
 def test_sase():
     sase_input = dict(
