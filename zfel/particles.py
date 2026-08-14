@@ -62,7 +62,7 @@ def general_load_bucket(
         eta_init = np.zeros((s_steps, npart))
         for k in range(s_steps):
             if N_real[k] == 0:
-                thet_init[k, :] = np.random.rand(1) * 2 * np.pi
+                thet_init[k, :] = np.random.rand() * 2 * np.pi
                 eta_init[k, :] = np.zeros(npart)
             else:
                 thet_init[k, :] = make_theta(npart, N_real[k])
@@ -103,7 +103,7 @@ def load_bucket(n, gbar, delg, Ns, iopt="sase"):
         if M * nb != n:
             raise ValueError("n must be a multiple of 4")
         for i in range(nb):
-            etaa = delg * np.random.randn(1) + gbar
+            etaa = delg * np.random.randn() + gbar
             # etaa=delg*(np.random.rand(1)-0.5)+gbar
             for j in range(M):
                 eta[i * M + j] = etaa
@@ -117,12 +117,12 @@ def load_bucket(n, gbar, delg, Ns, iopt="sase"):
             raise ValueError("n must be a multiple of 4")
         effnoise = np.sqrt(3 * M / (Ns / nb))  # Penman algorithm for Ns/nb >> M
         for i in range(nb):
-            etaa = delg * np.random.randn(1) + gbar
+            etaa = delg * np.random.randn() + gbar
             # etaa=delg*(np.random.rand(1)-0.5)+gbar
             for j in range(M):
                 eta[i * M + j] = etaa
                 thet[i * M + j] = (
-                    2 * np.pi * (j + 1) / M + 2 * np.random.rand(1) * effnoise
+                    2 * np.pi * (j + 1) / M + 2 * np.random.rand() * effnoise
                 )
     else:
         raise ValueError(f"Unknown iopt: {iopt}")
@@ -151,7 +151,7 @@ def make_theta(n, N_real_bucket):
     effnoise = np.sqrt(3 * M / (N_real_bucket / nb))  # Penman algorithm for Ns/nb >> M
     for i in range(nb):
         for j in range(M):
-            thet[i * M + j] = 2 * np.pi * (j + 1) / M + 2 * np.random.rand(1) * effnoise
+            thet[i * M + j] = 2 * np.pi * (j + 1) / M + 2 * np.random.rand() * effnoise
     return thet
 
 
